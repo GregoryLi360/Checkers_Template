@@ -1,21 +1,19 @@
-package chessLevel2;
+package checkers;
+
 import java.awt.Graphics;
 import java.util.ArrayList;
 
+// represents an empty square on the board. 
+// don't edit this class. 
 public class Empty extends Piece {
-	
-	// represents an empty square on the board. 
-	// don't edit this class. 
-	
 	public Empty() {
-		super(-1, null);
+		super(Team.NONE);
 	}
 
 	@Override
 	public ArrayList<int[]> getMoves(Board board, int r, int c) {
 		return null;
 	}
-
 
 	@Override
 	public boolean isEmpty() {
@@ -25,11 +23,5 @@ public class Empty extends Piece {
 	@Override
 	public void draw(Graphics g, int x, int y) {
 		return;
-	}
-
-	@Override
-	public boolean check(int kingr, int kingc, int r, int c, Board board) {
-		// TODO Auto-generated method stub
-		return false;
 	}
 }

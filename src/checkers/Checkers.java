@@ -1,39 +1,31 @@
-package chessLevel2;
-import java.awt.Color;
+package checkers;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-public class Chess {
-	
-	
-	/******** DON'T EDIT THIS CLASS ********/
-	
-		
-	// constants that are predefined and won't change
+import checkers.Piece.Team;
+
+/******** DON'T EDIT THIS CLASS ********/
+public class Checkers {
+	// constants that are predefined and won't change (me when I lie)
 	public static int width = 600;
 	public static int SQUARE_WIDTH = width/8;
-	public static int IMG_WIDTH = SQUARE_WIDTH;
-	public static int xadjust=0, yadjust=0; //center adjustment
+	public static int xadjust = 0, yadjust = 0; // center adjustment
 	
-	// the board
 	private Board board;
-//	private ArrayList<Board> prev=new ArrayList<Board>();
 	
 	// the most recently clicked-on piece and its location
 	private Piece last_clicked = null;
 	private int lastx = 0,lasty = 0;
 	
-	// current turn, alternates between 0 and 1
-	private int turn = 0;
+	private Team turn = Team.RED;
 	
 	// game status
 	private boolean game_over = false;
@@ -43,61 +35,64 @@ public class Chess {
 	
 	// very simple main method to get the game going
 	public static void main(String[] args) {
-		new Chess(); 
+		new Checkers(); 
 	}
  
 	// initialize the graphics and listeners
-	public Chess() {
+	public Checkers() {
 		board = new Board();
 		frame = new JFrame();
 		frame.setSize(width+2, width+24);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		JPanel canvas = new JPanel() {
 			public void paint(Graphics g) {
-				width = frame.getWidth()<frame.getHeight()?frame.getWidth():frame.getHeight()-24; //sets new width when resized
-				SQUARE_WIDTH = width/8; IMG_WIDTH = SQUARE_WIDTH; //sets all variables to follow
-				xadjust=Math.abs(frame.getWidth()-width)/2; yadjust=Math.abs(frame.getHeight()-width-24)/2; //gets adjustment value
+				width = frame.getWidth() < frame.getHeight() ? frame.getWidth() : frame.getHeight() - 24; //sets new width when resized
+				SQUARE_WIDTH = width / 8; 
+				
+				// adjustment value
+				xadjust = Math.abs(frame.getWidth()-width)/2; 
+				yadjust = Math.abs(frame.getHeight() - width - 24) / 2;
+
 				board.draw(g, last_clicked);
 			}
 		};
+		
 		canvas.addMouseListener(new MouseListener() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				if (!game_over) {
-					Piece clicked=((e.getY()-yadjust)/SQUARE_WIDTH>=8||(e.getY()-yadjust)/SQUARE_WIDTH<0||(e.getX()-xadjust)/SQUARE_WIDTH>=8||(e.getX()-xadjust)/SQUARE_WIDTH<0)?clicked=new Empty():board.getBoard()[(e.getY()-yadjust)/SQUARE_WIDTH][(e.getX()-xadjust)/SQUARE_WIDTH];;
-					//catches if mouse is out of grid
+					// catches if mouse is out of grid
+					int y = e.getY() - yadjust, x = e.getX() - xadjust;
+					int r = y / SQUARE_WIDTH, c = x / SQUARE_WIDTH;
+					Piece clicked;
+					if (r >= 8 || r < 0 || c >= 8 || c < 0) {
+						clicked = new Empty();
+					} else {
+						clicked = board.getBoard()[r][c];
+					}
+
 					if (clicked.getTeam() == turn) {
-						lastx = (e.getX()-xadjust)/SQUARE_WIDTH;
-						lasty = (e.getY()-yadjust)/SQUARE_WIDTH;
+						lastx = (e.getX() - xadjust) / SQUARE_WIDTH;
+						lasty = (e.getY() - yadjust) / SQUARE_WIDTH;
 						last_clicked = clicked;
 					}
 					
-					else if (last_clicked != null)		{	
-
-						if (is_in((e.getY()-yadjust)/SQUARE_WIDTH, (e.getX()-xadjust)/SQUARE_WIDTH, last_clicked.getMoves(board, lasty, lastx))) {
-								
-							int result = board.move(lasty, lastx, (e.getY()-yadjust)/SQUARE_WIDTH, (e.getX()-xadjust)/SQUARE_WIDTH);
+					else if (last_clicked != null) {
+						if (is_in((e.getY() - yadjust) / SQUARE_WIDTH, (e.getX() - xadjust) / SQUARE_WIDTH, last_clicked.getMoves(board, lasty, lastx))) {	
+							int result = board.move(lasty, lastx, (e.getY() - yadjust) / SQUARE_WIDTH, (e.getX() - xadjust) / SQUARE_WIDTH);
 							
 							if (result == 2) {
 								game_over = true;
 								frame.getContentPane().repaint();
-								JOptionPane.showMessageDialog(null, "Checkmate. " + (turn == 0 ? "White" : "Black") + " wins!");
+								JOptionPane.showMessageDialog(null, "Game over. " + turn + " wins!");
 								return;
 							}
-							else if (result == 1) {
-								frame.getContentPane().repaint();
-								JOptionPane.showMessageDialog(null, "Check");
-							}
 
-							
 							last_clicked = null;
-					
-							turn = (turn + 1)%2;
-//							prev.add(board);
+							turn = turn.toggle();
 						}
 					}
 				}
-//				for (Piece[] z:board.getBoard()) System.out.println(Arrays.toString(z));
 				frame.getContentPane().repaint();
 			}
 			
@@ -117,10 +112,7 @@ public class Chess {
 		canvas.addKeyListener(new KeyListener() {
 
 			@Override
-			public void keyTyped(KeyEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
+			public void keyTyped(KeyEvent e) {}
 
 			@Override
 			public void keyPressed(KeyEvent e) {
@@ -141,10 +133,7 @@ public class Chess {
 			}
 
 			@Override
-			public void keyReleased(KeyEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
+			public void keyReleased(KeyEvent e) {}
 			
 		});
 		
@@ -165,8 +154,7 @@ public class Chess {
 	
 	public boolean is_in(int x, int y, ArrayList<int[]> moves) {
 		for (int[] pair : moves) {
-			if (x == pair[0] && y == pair[1])
-				return true;
+			if (x == pair[0] && y == pair[1]) { return true; }
 		}
 		return false;
 	}
